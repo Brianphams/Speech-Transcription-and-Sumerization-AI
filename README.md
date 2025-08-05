@@ -39,3 +39,4 @@ Bootstrap & jQuery: Smooth and responsive UI
 🖼️ UI Sneak Peek
 
 <img width="886" height="546" alt="Screenshot 2025-08-05 231340" src="https://github.com/user-attachments/assets/e571db91-51a8-46a7-a71d-b953904e030e" />
+<img width="849" height="572" alt="Screenshot 2025-08-05 231406" src="https://github.com/user-attachments/assets/23707272-a7e8-4d67-9374-8c1112eac894" />
