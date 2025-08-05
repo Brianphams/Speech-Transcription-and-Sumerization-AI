@@ -1,41 +1,41 @@
 🎙️ Speech-to-Text & Summarization App
-Tự động chuyển giọng nói thành văn bản, tóm tắt nội dung, và theo dõi kết quả theo thời gian thực.
+Turn voice into readable text and get a summary — in real time!
 
-🚀 Giới thiệu
-Ứng dụng web này cho phép bạn tải lên các file MP3 hoặc MP4, sau đó:
+🚀 Overview
+This web app lets you upload MP3 or MP4 files and automatically:
 
-✨ Chuyển giọng nói thành văn bản bằng AI (WhisperX)
+✨ Transcribe speech to text using AI (WhisperX)
+✨ Summarize the content using the T5 model
+✨ View results live on the interface with real-time updates
 
-✨ Tự động tóm tắt nội dung bằng mô hình T5
+It’s designed to run locally — great for demos, research projects, or as a base for production systems.
 
-✨ Cập nhật kết quả theo thời gian thực ngay trên giao diện
+🔍 Key Features
+✅ Easy upload for MP3/MP4 files
+✅ Automatic and accurate speech transcription
+✅ Readable, AI-powered content summarization
+✅ Real-time result updates using SignalR
+✅ Clean, intuitive interface with collapsible result sections
 
-Nó được thiết kế để chạy toàn bộ trên máy cá nhân – phù hợp cho demo, nghiên cứu hoặc mở rộng cho hệ thống thực tế.
+🛠️ Tech Stack
+🎧 Audio Processing & AI (Python + FastAPI)
+WhisperX: Accurate speech recognition
 
-🔍 Tính năng nổi bật
-✅ Tải file MP3/MP4 dễ dàng
-✅ Tự động chuyển giọng nói thành text (Transcribe)
-✅ Tóm tắt nội dung dễ đọc (Summarization)
-✅ Theo dõi kết quả theo thời gian thực qua SignalR
-✅ Giao diện trực quan, gọn gàng, có phân chia từng phần
+T5 Transformer: Text summarization
 
-🛠️ Công nghệ sử dụng
-🎧 Xử lý âm thanh & AI (Python - FastAPI)
-WhisperX: Nhận dạng giọng nói chính xác
+FastAPI + Uvicorn: High-speed backend API
 
-T5 Transformer: Tóm tắt nội dung văn bản
+PyDub + FFmpeg: Converts audio for processing
 
-FastAPI + Uvicorn: API siêu nhanh
+🌐 Frontend & Orchestration (ASP.NET Core)
+ASP.NET Core MVC + Razor: Dynamic web interface
 
-PyDub & FFmpeg: Hỗ trợ chuyển đổi âm thanh
+SignalR: Real-time updates as processing happens
 
-🌐 Giao diện & Điều phối (ASP.NET Core)
-ASP.NET Core MVC + Razor: Giao diện web
+Hangfire: Background processing made easy
 
-SignalR: Nhận kết quả tức thời
+Bootstrap & jQuery: Smooth and responsive UI
 
-Hangfire: Xử lý nền thông minh
+🖼️ UI Sneak Peek
 
-Bootstrap & jQuery: Giao diện đẹp và mượt
-
-🖼️ Giao diện minh họa
+<img width="886" height="546" alt="Screenshot 2025-08-05 231340" src="https://github.com/user-attachments/assets/e571db91-51a8-46a7-a71d-b953904e030e" />
