@@ -1,0 +1,6 @@
+@SpetoTex_HostAddress = http://localhost:5013
+
+GET {{SpetoTex_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

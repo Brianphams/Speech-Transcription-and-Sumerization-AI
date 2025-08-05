@@ -1,0 +1,18 @@
+[
+  {
+    "ContainingType": "Video.Controllers.VideoUploadController",
+    "Method": "UploadVideo",
+    "RelativePath": "api/VideoUpload/upload",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Video",
+        "Type": "Microsoft.AspNetCore.Http.IFormFile",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

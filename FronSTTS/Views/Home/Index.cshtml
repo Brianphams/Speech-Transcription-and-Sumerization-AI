@@ -1,0 +1,266 @@
+﻿@{
+    ViewData["Title"] = "Speech-to-Text & Summarization";
+}
+
+<div class="container">
+    <h2>🎧 Upload MP3 / MP4</h2>
+    <input type="file" id="fileInput" accept=".mp3,.mp4" class="form-control" />
+    <button onclick="uploadFile()" class="btn btn-primary mt-3">Upload</button>
+
+    <div id="message" class="message" style="display: none;"></div>
+
+    <h4 class="mt-4">📜 Transcription Segments:</h4>
+    <div class="collapsible" onclick="toggleCollapsible(this)">Transcription Segments <span></span></div>
+    <div id="segments" class="content result-box"></div>
+
+    <h4 class="mt-4">📜 Full Transcript:</h4>
+    <div class="collapsible" onclick="toggleCollapsible(this)">Full Transcript <span></span></div>
+    <div id="fullTranscript" class="content result-box"></div>
+
+    <h4 class="mt-4">📝 Summary Chunks:</h4>
+    <div class="collapsible" onclick="toggleCollapsible(this)">Summary Chunks <span></span></div>
+    <div id="summaryChunks" class="content result-box"></div>
+
+    <h4 class="mt-4">📝 Final Summary:</h4>
+    <div class="collapsible" onclick="toggleCollapsible(this)">Final Summary <span></span></div>
+    <div id="summary" class="content result-box"></div>
+</div>
+
+@section Scripts {
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #e0e7ff, #c3dafe);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            max-width: 700px;
+            margin: 0 auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            color: #1e3a8a;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .result-box {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f3f4f6;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            padding: 12px;
+            background: #e5e7eb;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #1e3a8a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .collapsible::after {
+                content: '▼';
+                transition: transform 0.3s;
+            }
+
+            .collapsible.active::after {
+                transform: rotate(180deg);
+            }
+
+        .content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            margin-top: 10px;
+        }
+
+            .content.active {
+                max-height: 400px;
+                overflow-y: auto;
+            }
+
+        .chunk-item {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+            .chunk-item:last-child {
+                border-bottom: none;
+            }
+
+        h4 {
+            margin: 20px 0 10px;
+            color: #1e3a8a;
+            font-size: 18px;
+        }
+    </style>
+
+    <script>
+        let connection;
+        let currentJobId = null;
+
+        function toggleCollapsible(element) {
+            element.classList.toggle('active');
+            const content = element.nextElementSibling;
+            content.classList.toggle('active');
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+            const message = document.getElementById("message");
+
+            message.style.display = 'none';
+            message.className = 'message';
+
+            if (!file) {
+                message.textContent = 'Please select a file.';
+                message.classList.add('error');
+                message.style.display = 'block';
+                return;
+            }
+
+            const allowedExtensions = ['.mp3', '.mp4'];
+            const fileExtension = file.name.toLowerCase().split('.').pop();
+            if (!allowedExtensions.includes(`.${fileExtension}`)) {
+                message.textContent = 'Only .mp3 or .mp4 files are allowed.';
+                message.classList.add('error');
+                message.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("Video", file);
+
+            try {
+                const response = await fetch("/api/VideoUpload/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || "Upload failed.");
+                }
+
+                currentJobId = result.videoId;
+                message.textContent = `✅ Uploaded successfully! Job ID: ${currentJobId}`;
+                message.classList.add('success');
+                message.style.display = 'block';
+
+                await setupSignalR(currentJobId);
+
+            } catch (err) {
+                message.textContent = `❌ Upload error: ${err.message}`;
+                message.classList.add('error');
+                message.style.display = 'block';
+            }
+        }
+
+        async function setupSignalR(jobId) {
+            const segmentsDiv = document.getElementById("segments");
+            const fullTranscriptDiv = document.getElementById("fullTranscript");
+            const summaryChunksDiv = document.getElementById("summaryChunks");
+            const summaryDiv = document.getElementById("summary");
+
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl("/videoProcessingHub")
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("ReceiveProcessingResult", (jsonResult) => {
+                console.log("Received SignalR result:", jsonResult);
+                try {
+                    const result = JSON.parse(jsonResult);
+                    if (result.error) {
+                        segmentsDiv.textContent = `[❌ Error: ${result.error}]`;
+                        fullTranscriptDiv.textContent = `[❌ Error: ${result.error}]`;
+                        summaryChunksDiv.textContent = `[❌ Error: ${result.error}]`;
+                        summaryDiv.textContent = `[❌ Error: ${result.error}]`;
+                    } else {
+                        // Display transcription segments
+                        if (result.segments && result.segments.length > 0) {
+                            segmentsDiv.innerHTML = result.segments
+                                .map((seg, index) => `<div class="chunk-item">Segment ${index + 1}: ${seg}</div>`)
+                                .join('');
+                            segmentsDiv.parentElement.querySelector('.collapsible').classList.add('active');
+                            segmentsDiv.classList.add('active');
+                        } else {
+                            segmentsDiv.textContent = "[No segments received]";
+                        }
+
+                        // Display full transcript
+                        fullTranscriptDiv.textContent = result.transcript || "[No transcript received]";
+                        fullTranscriptDiv.parentElement.querySelector('.collapsible').classList.add('active');
+                        fullTranscriptDiv.classList.add('active');
+
+                        // Display summary chunks
+                        if (result.summary_chunks && result.summary_chunks.length > 0) {
+                            summaryChunksDiv.innerHTML = result.summary_chunks
+                                .map((chunk, index) => `<div class="chunk-item">Summary Chunk ${index + 1}: ${chunk}</div>`)
+                                .join('');
+                            summaryChunksDiv.parentElement.querySelector('.collapsible').classList.add('active');
+                            summaryChunksDiv.classList.add('active');
+                        } else {
+                            summaryChunksDiv.textContent = "[No summary chunks received]";
+                        }
+
+                        // Display final summary
+                        summaryDiv.textContent = result.summary || "[No summary received]";
+                        summaryDiv.parentElement.querySelector('.collapsible').classList.add('active');
+                        summaryDiv.classList.add('active');
+                    }
+                } catch (e) {
+                    console.error("Parse error:", e);
+                    segmentsDiv.textContent = "[❌ Failed to parse result]";
+                    fullTranscriptDiv.textContent = "[❌ Failed to parse result]";
+                    summaryChunksDiv.textContent = "[❌ Failed to parse result]";
+                    summaryDiv.textContent = "[❌ Failed to parse result]";
+                }
+            });
+
+            try {
+                await connection.start();
+                console.log("✅ SignalR connected.");
+                await connection.invoke("JoinGroup", jobId);
+                console.log(`📡 Joined SignalR group: ${jobId}`);
+            } catch (err) {
+                console.error("❌ SignalR connection failed:", err);
+            }
+        }
+    </script>
+}

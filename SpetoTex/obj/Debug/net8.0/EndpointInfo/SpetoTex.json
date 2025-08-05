@@ -1,0 +1,41 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Backendd API",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/VideoUpload/upload": {
+      "post": {
+        "tags": [
+          "VideoUpload"
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "required": [
+                  "video"
+                ],
+                "type": "object",
+                "properties": {
+                  "video": {
+                    "type": "string",
+                    "description": "File upload",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": { }
+}
